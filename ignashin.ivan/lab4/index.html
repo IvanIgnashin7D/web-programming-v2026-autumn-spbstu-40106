@@ -3,40 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Лабораторная работа — Вариант 25 (Задача 4)</title>
+    <title>Lab 4</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <form data-testid="entity-form">
-      <label for="input-id" class="sr-only">ID</label>
-      <input id="input-id" type="text" name="id" placeholder="ID" required />
-
-      <label for="input-name" class="sr-only">Название</label>
+      <input type="text" name="id" placeholder="ID" />
+      <input type="text" name="name" placeholder="Название" />
+      <input type="text" name="price" placeholder="Цена" />
       <input
-        id="input-name"
-        type="text"
-        name="name"
-        placeholder="Название"
-        required
-      />
-
-      <label for="input-price" class="sr-only">Цена</label>
-      <input
-        id="input-price"
-        type="number"
-        name="price"
-        placeholder="Цена"
-        required
-      />
-
-      <label for="input-categories" class="sr-only">Категории</label>
-      <input
-        id="input-categories"
         type="text"
         name="categories"
         placeholder="Категории (через запятую)"
       />
-
       <button type="submit">Добавить товар</button>
     </form>
 

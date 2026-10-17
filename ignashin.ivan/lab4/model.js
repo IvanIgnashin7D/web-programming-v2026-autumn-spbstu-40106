@@ -1,13 +1,13 @@
 export class Product {
-  constructor(id, name, categories = [], price = 0) {
+  constructor(id, name, categories = [], price) {
     this.id = id;
     this.name = name;
-    this.categories = Array.isArray(categories) ? categories : [];
-    this.price = Number(price) || 0;
+    this.categories = categories;
+    this.price = price;
   }
 
   addCategory(category) {
-    if (category && !this.categories.includes(category)) {
+    if (!this.categories.includes(category)) {
       this.categories.push(category);
     }
   }

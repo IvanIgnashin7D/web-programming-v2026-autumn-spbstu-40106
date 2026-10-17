@@ -8,18 +8,6 @@ body {
   margin: 0 auto;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 form[data-testid='entity-form'] {
   display: flex;
   gap: 10px;
@@ -27,8 +15,7 @@ form[data-testid='entity-form'] {
   flex-wrap: wrap;
 }
 
-form[data-testid='entity-form'] input,
-.category-input {
+form[data-testid='entity-form'] input {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -42,47 +29,15 @@ form[data-testid='entity-form'] input,
   background-color: #f9f9f9;
 }
 
-.card h3 {
-  margin-top: 0;
-  margin-bottom: 8px;
-}
-
-.card p {
-  margin: 6px 0;
-}
-
-.category-controls {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 12px 0;
-}
-
 button {
   padding: 8px 12px;
   cursor: pointer;
-  background-color: #0056b3;
-  color: #ffffff;
+  background-color: #007bff;
+  color: #fff;
   border: none;
   border-radius: 4px;
 }
 
 button:hover {
-  background-color: #004085;
-}
-
-button.btn-secondary {
-  background-color: #545b62;
-}
-
-button.btn-secondary:hover {
-  background-color: #3d4246;
-}
-
-button.btn-danger {
-  background-color: #bd2130;
-}
-
-button.btn-danger:hover {
-  background-color: #921925;
+  background-color: #0056b3;
 }
