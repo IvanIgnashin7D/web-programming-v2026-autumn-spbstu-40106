@@ -3,27 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lab 4 - Вариант 25</title>
+    <title>Lab 4</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <form data-testid="entity-form" id="product-form">
+    <!-- Форма создания товара (публичный контракт CI: поля id, name, price, categories) -->
+    <form data-testid="entity-form" class="entity-form">
       <div class="form-title">Добавить товар</div>
-      <input type="number" name="id" placeholder="ID (число)" required />
-      <input type="text" name="name" placeholder="Название товара" required />
-      <input type="number" name="price" placeholder="Цена" required />
+      <input type="text" name="id" placeholder="ID" />
+      <input type="text" name="name" placeholder="Название" />
+      <input type="text" name="price" placeholder="Цена" />
+      <input
+        type="text"
+        name="categories"
+        placeholder="Категории (через запятую)"
+      />
       <button type="submit">Добавить товар</button>
     </form>
 
-    <form id="category-form">
-      <div class="form-title">Добавить категорию</div>
-      <input type="number" name="productId" placeholder="ID товара" required />
-      <input
-        type="text"
-        name="category"
-        placeholder="Название категории"
-        required
-      />
+    <!-- Дополнительная форма для управления категориями (по ТЗ варианта 25) -->
+    <form class="category-form">
+      <div class="form-title">Добавить категорию к товару</div>
+      <input type="text" name="productId" placeholder="ID товара" />
+      <input type="text" name="category" placeholder="Название категории" />
       <button type="submit">Добавить категорию</button>
     </form>
 

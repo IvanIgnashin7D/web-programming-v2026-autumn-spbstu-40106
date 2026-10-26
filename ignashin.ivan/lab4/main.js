@@ -6,17 +6,25 @@ try {
   const saved = localStorage.getItem('products');
   if (saved) {
     const parsed = JSON.parse(saved);
-    products = parsed.map(
-      (p) => new Product(Number(p.id), p.name, p.categories, Number(p.price)),
-    );
+    if (Array.isArray(parsed)) {
+      products = parsed.map(
+        (p) =>
+          new Product(
+            p.id,
+            p.name,
+            Array.isArray(p.categories) ? p.categories : [],
+            Number(p.price) || 0,
+          ),
+      );
+    }
   }
 } catch (e) {
   console.error('Failed to parse localStorage', e);
 }
 
 const listElement = document.querySelector('[data-testid="entity-list"]');
-const formElement = document.getElementById('product-form');
-const categoryFormElement = document.getElementById('category-form');
+const formElement = document.querySelector('form[data-testid="entity-form"]');
+const categoryFormElement = document.querySelector('.category-form');
 
 function renderList() {
   listElement.innerHTML = '';
@@ -26,11 +34,11 @@ function renderList() {
     card.className = 'card';
 
     const title = document.createElement('h3');
-    title.textContent = `${p.name || 'Без названия'} (ID: ${p.id})`;
+    title.textContent = `${p.name || 'Без названия'} (#${p.id ?? '?'})`;
     card.appendChild(title);
 
     const priceText = document.createElement('p');
-    priceText.textContent = `Цена: ${p.price || 0} руб.`;
+    priceText.textContent = `Цена: ${p.price ?? 0}`;
     card.appendChild(priceText);
 
     const catsTitle = document.createElement('p');
@@ -48,7 +56,8 @@ function renderList() {
       const removeCatBtn = document.createElement('button');
       removeCatBtn.className = 'btn-small btn-danger';
       removeCatBtn.type = 'button';
-      removeCatBtn.textContent = 'Удалить категорию';
+      removeCatBtn.textContent = '×';
+      removeCatBtn.title = 'Удалить категорию';
       removeCatBtn.onclick = () => removeCategoryAsync(p.id, category);
 
       catBadge.appendChild(removeCatBtn);
@@ -56,14 +65,15 @@ function renderList() {
     });
     card.appendChild(catsContainer);
 
+    // Основная кнопка удаления карточки по контракту CI
     const deleteBtn = document.createElement('button');
     deleteBtn.setAttribute('data-testid', 'delete-entity');
-    deleteBtn.className = 'btn-danger';
+    deleteBtn.setAttribute('data-id', p.id);
     deleteBtn.type = 'button';
-    deleteBtn.textContent = 'Удалить товар';
-    deleteBtn.onclick = () => deleteEntityAsync(p.id);
-
+    deleteBtn.className = 'btn-danger';
+    deleteBtn.textContent = 'Удалить';
     card.appendChild(deleteBtn);
+
     listElement.appendChild(card);
   });
 }
@@ -76,12 +86,8 @@ function saveAndRender() {
 const addEntityAsync = (product) => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      if (!products.some((p) => p.id === product.id)) {
-        products.push(product);
-        saveAndRender();
-      } else {
-        alert('Товар с таким ID уже существует!');
-      }
+      products.push(product);
+      saveAndRender();
       resolve();
     }, 150);
   });
@@ -90,7 +96,7 @@ const addEntityAsync = (product) => {
 const deleteEntityAsync = (id) => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      products = products.filter((p) => p.id !== id);
+      products = products.filter((p) => String(p.id) !== String(id));
       saveAndRender();
       resolve();
     }, 150);
@@ -100,12 +106,10 @@ const deleteEntityAsync = (id) => {
 const addCategoryAsync = (productId, category) => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      const product = products.find((p) => p.id === productId);
+      const product = products.find((p) => String(p.id) === String(productId));
       if (product) {
         product.addCategory(category);
         saveAndRender();
-      } else {
-        alert('Товар с указанным ID не найден!');
       }
       resolve();
     }, 150);
@@ -115,7 +119,7 @@ const addCategoryAsync = (productId, category) => {
 const removeCategoryAsync = (productId, category) => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      const product = products.find((p) => p.id === productId);
+      const product = products.find((p) => String(p.id) === String(productId));
       if (product) {
         product.removeCategory(category);
         saveAndRender();
@@ -129,26 +133,48 @@ formElement.addEventListener('submit', (e) => {
   e.preventDefault();
   const formData = new FormData(formElement);
 
-  const id = Number(formData.get('id'));
-  const name = formData.get('name');
+  const rawId = formData.get('id');
+  const id =
+    rawId !== null && rawId !== '' && !isNaN(Number(rawId))
+      ? Number(rawId)
+      : rawId;
+  const name = formData.get('name') || '';
   const price = Number(formData.get('price')) || 0;
 
-  addEntityAsync(new Product(id, name, [], price)).then(() => {
+  const categoriesStr = formData.get('categories') || '';
+  const categories = categoriesStr
+    ? categoriesStr
+        .split(',')
+        .map((c) => c.trim())
+        .filter(Boolean)
+    : [];
+
+  addEntityAsync(new Product(id, name, categories, price)).then(() => {
     formElement.reset();
   });
 });
 
-categoryFormElement.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const formData = new FormData(categoryFormElement);
+if (categoryFormElement) {
+  categoryFormElement.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const formData = new FormData(categoryFormElement);
 
-  const productId = Number(formData.get('productId'));
-  const category = formData.get('category').trim();
+    const productId = formData.get('productId');
+    const category = (formData.get('category') || '').trim();
 
-  if (category) {
-    addCategoryAsync(productId, category).then(() => {
-      categoryFormElement.reset();
-    });
+    if (category) {
+      addCategoryAsync(productId, category).then(() => {
+        categoryFormElement.reset();
+      });
+    }
+  });
+}
+
+listElement.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-testid="delete-entity"]');
+  if (btn) {
+    const id = btn.getAttribute('data-id');
+    deleteEntityAsync(id);
   }
 });
 
