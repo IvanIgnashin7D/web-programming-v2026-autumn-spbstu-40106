@@ -7,7 +7,7 @@ try {
   if (saved) {
     const parsed = JSON.parse(saved);
     products = parsed.map(
-      (p) => new Product(p.id, p.name, p.categories, p.price),
+      (p) => new Product(Number(p.id), p.name, p.categories, Number(p.price)),
     );
   }
 } catch (e) {
@@ -15,7 +15,8 @@ try {
 }
 
 const listElement = document.querySelector('[data-testid="entity-list"]');
-const formElement = document.querySelector('form[data-testid="entity-form"]');
+const formElement = document.getElementById('product-form');
+const categoryFormElement = document.getElementById('category-form');
 
 function renderList() {
   listElement.innerHTML = '';
@@ -25,26 +26,44 @@ function renderList() {
     card.className = 'card';
 
     const title = document.createElement('h3');
-    title.textContent = `${p.name || 'Без названия'} (#${p.id || '?'})`;
+    title.textContent = `${p.name || 'Без названия'} (ID: ${p.id})`;
     card.appendChild(title);
 
     const priceText = document.createElement('p');
-    priceText.textContent = `Цена: ${p.price || 0}`;
+    priceText.textContent = `Цена: ${p.price || 0} руб.`;
     card.appendChild(priceText);
 
-    const catsText = document.createElement('p');
-    catsText.textContent = `Категории: ${
-      Array.isArray(p.categories) ? p.categories.join(', ') : ''
-    }`;
-    card.appendChild(catsText);
+    const catsTitle = document.createElement('p');
+    catsTitle.textContent = `Категории (Всего: ${p.categoryCount}):`;
+    card.appendChild(catsTitle);
+
+    const catsContainer = document.createElement('div');
+    catsContainer.className = 'categories-container';
+
+    (p.categories || []).forEach((category) => {
+      const catBadge = document.createElement('span');
+      catBadge.className = 'category-badge';
+      catBadge.textContent = category;
+
+      const removeCatBtn = document.createElement('button');
+      removeCatBtn.className = 'btn-small btn-danger';
+      removeCatBtn.type = 'button';
+      removeCatBtn.textContent = 'Удалить категорию';
+      removeCatBtn.onclick = () => removeCategoryAsync(p.id, category);
+
+      catBadge.appendChild(removeCatBtn);
+      catsContainer.appendChild(catBadge);
+    });
+    card.appendChild(catsContainer);
 
     const deleteBtn = document.createElement('button');
     deleteBtn.setAttribute('data-testid', 'delete-entity');
-    deleteBtn.setAttribute('data-id', p.id);
+    deleteBtn.className = 'btn-danger';
     deleteBtn.type = 'button';
-    deleteBtn.textContent = 'Удалить';
-    card.appendChild(deleteBtn);
+    deleteBtn.textContent = 'Удалить товар';
+    deleteBtn.onclick = () => deleteEntityAsync(p.id);
 
+    card.appendChild(deleteBtn);
     listElement.appendChild(card);
   });
 }
@@ -57,8 +76,12 @@ function saveAndRender() {
 const addEntityAsync = (product) => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      products.push(product);
-      saveAndRender();
+      if (!products.some((p) => p.id === product.id)) {
+        products.push(product);
+        saveAndRender();
+      } else {
+        alert('Товар с таким ID уже существует!');
+      }
       resolve();
     }, 150);
   });
@@ -67,8 +90,36 @@ const addEntityAsync = (product) => {
 const deleteEntityAsync = (id) => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      products = products.filter((p) => String(p.id) !== String(id));
+      products = products.filter((p) => p.id !== id);
       saveAndRender();
+      resolve();
+    }, 150);
+  });
+};
+
+const addCategoryAsync = (productId, category) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const product = products.find((p) => p.id === productId);
+      if (product) {
+        product.addCategory(category);
+        saveAndRender();
+      } else {
+        alert('Товар с указанным ID не найден!');
+      }
+      resolve();
+    }, 150);
+  });
+};
+
+const removeCategoryAsync = (productId, category) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const product = products.find((p) => p.id === productId);
+      if (product) {
+        product.removeCategory(category);
+        saveAndRender();
+      }
       resolve();
     }, 150);
   });
@@ -78,27 +129,26 @@ formElement.addEventListener('submit', (e) => {
   e.preventDefault();
   const formData = new FormData(formElement);
 
-  const id = formData.get('id');
+  const id = Number(formData.get('id'));
   const name = formData.get('name');
   const price = Number(formData.get('price')) || 0;
 
-  const categoriesStr = formData.get('categories');
-  const categories = categoriesStr
-    ? categoriesStr.split(',').map((c) => c.trim())
-    : [];
-
-  addEntityAsync(new Product(id, name, categories, price)).then(() => {
+  addEntityAsync(new Product(id, name, [], price)).then(() => {
     formElement.reset();
   });
 });
 
-listElement.addEventListener('click', (e) => {
-  if (
-    e.target.hasAttribute('data-testid') &&
-    e.target.getAttribute('data-testid') === 'delete-entity'
-  ) {
-    const id = e.target.getAttribute('data-id');
-    deleteEntityAsync(id);
+categoryFormElement.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const formData = new FormData(categoryFormElement);
+
+  const productId = Number(formData.get('productId'));
+  const category = formData.get('category').trim();
+
+  if (category) {
+    addCategoryAsync(productId, category).then(() => {
+      categoryFormElement.reset();
+    });
   }
 });
 
